@@ -183,3 +183,17 @@ They cluster (row 12547 has four), which suggests an export tool emitting
 zero-radius rounded corners.
 
 **These are not conversion failures.** The 108,507 figure hides no errors.
+
+## 5. Corrupt Data
+
+`tokenize()` returns `None` if any path value exceeds 10,000. Since the canvas is 200 units, the code treats such large values as suspicious.
+
+Out of 20,000 SVG files, 17 were rejected. The first five inspected files:
+
+* Row 913: 2 paths, largest value `1.5e+16`
+* Row 2075: 2 paths, largest value `1.54e+05`
+* Row 5011: 1 path, largest value `4.37e+04`
+* Row 5818: 1 path, largest value `9.13e+05`
+* Row 9305: 7 paths, largest value `2.66e+05`
+
+The smallest of these five largest values is 43,700. This is about 218 times the canvas width of 200 units, so it is an unusually large value.
