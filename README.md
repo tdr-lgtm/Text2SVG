@@ -341,8 +341,3 @@ Out of 20,000 SVG files, 17 were rejected. The first five inspected files:
 * Row 9305: 7 paths, largest value `2.66e+05`
 
 The smallest of these five largest values is 43,700. This is about 218 times the canvas width of 200 units, so it is an unusually large value.
-
-## License
-
-MIT for the code. Non-commercial only due to the training dataset.
-See [LICENSE](LICENSE) for details.
