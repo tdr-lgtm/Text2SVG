@@ -1,16 +1,23 @@
 [project]
 name = "text2svg"
 version = "0.1.0"
-description = "Add your description here"
+description = "Text-to-SVG icon generation using Qwen2.5-7B with grammar-constrained decoding"
 readme = "README.md"
 authors = [
-    { name = "tdr-lgtm", email = "tdrv871@email.com" }
+    { name = "Dhruvesh Nagar", email = "tdrv871@email.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
-
-[project.scripts]
-text2svg = "text2svg:main"
+dependencies = [
+    "torch",
+    "transformers",
+    "peft",
+    "bitsandbytes",
+    "accelerate",
+    "datasets",
+    "cairosvg",
+    "tqdm",
+    "numpy",
+]
 
 [build-system]
 requires = ["uv_build>=0.12.13,<0.13.0"]

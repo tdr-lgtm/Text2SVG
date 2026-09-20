@@ -1,11 +1,155 @@
-# Text2SVG - text-to-SVG icon generation
+# Text2SVG – Text-to-SVG Icon Generation
+
+Type a description, get an SVG icon. Built on Qwen2.5-7B, trained on
+50,000 icons from OmniSVG/MMSVG-Icon.
+
+The model speaks a custom token language: path commands, quantized
+coordinates, and packed colours. A grammar state machine masks the
+logits at every step so only structurally legal tokens are reachable.
+Every output parses. Every output renders.
+
+## What it does
+
+- Tokenizes SVG path data, fill colours, and coordinates into a closed
+  4,621-token vocabulary
+- Converts arcs to cubic Bézier curves before tokenization, so the
+  vocabulary needs no arc-specific tokens
+- Fine-tunes Qwen2.5-7B with LoRA and 4-bit quantization
+- Constrains generation with a grammar that tracks path state and token
+  budget, preventing empty or runaway outputs
+- Decodes token sequences back to SVG markup and renders to PNG as well.
+
+## Quick Start
+
+**1. Install dependencies**
+
+```bash
+pip install torch transformers peft bitsandbytes accelerate datasets cairosvg
+```
+
+**2. Clone the code**
+
+```bash
+git clone https://github.com/tdr-lgtm/Text2SVG
+cd Text2SVG
+```
+
+**3. Download the model**
+
+```bash
+pip install huggingface_hub
+hf download tdrv8/Text2SVG --local-dir checkpoint
+```
+
+**4. Generate an icon**
+
+```bash
+python -m svgicon.generate --ckpt checkpoint --prompt "A yellow star icon." --out out
+```
+
+Open `out/00_0.svg` or `out/00_0.png` to see the result.
+
+## Generated Examples
+
+### Custom Prompt
+
+**Prompt:** A yellow star icon.
+
+```bash
+python -m svgicon.generate --ckpt checkpoint --prompt "A yellow star icon." --out results/out
+```
+
+![Generated yellow star](results/out/00_0.png)
+
+### Default Prompts
+
+Generated four samples for each default prompt.
+
+```bash
+python -m svgicon.generate --ckpt checkpoint -n 4 --out results/samples
+```
+
+**1. A black coffee cup icon on a white background.**
+
+| Sample 1                                  | Sample 2                                  | Sample 3                                  | Sample 4                                  |
+| ----------------------------------------- | ----------------------------------------- | ----------------------------------------- | ----------------------------------------- |
+| ![Coffee cup 1](results/samples/00_0.png) | ![Coffee cup 2](results/samples/00_1.png) | ![Coffee cup 3](results/samples/00_2.png) | ![Coffee cup 4](results/samples/00_3.png) |
+
+**2. A simple blue arrow pointing to the right.**
+
+| Sample 1                             | Sample 2                             | Sample 3                             | Sample 4                             |
+| ------------------------------------ | ------------------------------------ | ------------------------------------ | ------------------------------------ |
+| ![Arrow 1](results/samples/01_0.png) | ![Arrow 2](results/samples/01_1.png) | ![Arrow 3](results/samples/01_2.png) | ![Arrow 4](results/samples/01_3.png) |
+
+**3. A yellow star icon with five points.**
+
+| Sample 1                            | Sample 2                            | Sample 3                            | Sample 4                            |
+| ----------------------------------- | ----------------------------------- | ----------------------------------- | ----------------------------------- |
+| ![Star 1](results/samples/02_0.png) | ![Star 2](results/samples/02_1.png) | ![Star 3](results/samples/02_2.png) | ![Star 4](results/samples/02_3.png) |
+
+**4. A green checkmark inside a circle.**
+
+| Sample 1                                 | Sample 2                                 | Sample 3                                 | Sample 4                                 |
+| ---------------------------------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| ![Checkmark 1](results/samples/03_0.png) | ![Checkmark 2](results/samples/03_1.png) | ![Checkmark 3](results/samples/03_2.png) | ![Checkmark 4](results/samples/03_3.png) |
+
+> **Note:** The model was fine-tuned on 50,000 SVG icons, so its training data is limited. Some generated icons may appear broken, incomplete, or differ from the intended design. Output quality may improve with more diverse training data and further fine-tuning.
 
 
-Generate a vector icon from a text description. Type "a green checkmark
-inside a circle" and get an SVG file that renders in any browser.
+## Checkpoint
 
-Built on Qwen2.5-7B with a custom SVG token vocabulary and a grammar that
-makes malformed output structurally impossible.
+| file | size | contents |
+|---|---|---|
+| adapter_model.safetensors | 323 MB | LoRA weights |
+| svg_embeddings.pt | 66 MB | SVG input embeddings |
+| svg_lm_head.pt | 66 MB | SVG output embeddings |
+| meta.json | — | vocab size, token range, loss history |
+| adapter_config.json | — | LoRA configuration |
+| tokenizer.json | — | Qwen tokenizer |
+| tokenizer_config.json | — | tokenizer settings |
+
+
+The base Qwen weights are not saved. On load they are pulled fresh from
+HuggingFace and the SVG rows are spliced back in.
+
+## File Structure
+
+```text
+Text2SVG/
+├── svgicon/
+│   ├── config.py        # All tunable settings in one place
+│   ├── tokenizer.py     # SVG ↔ tokens ↔ IDs
+│   ├── arc.py           # Elliptical arc → cubic Bézier
+│   ├── grammar.py       # State machine defining legal next tokens
+│   ├── vocab.py         # Maps SVG tokens above Qwen's ID space
+│   ├── data.py          # Dataset loading and batching
+│   ├── model.py         # 4-bit Qwen + embeddings + LoRA + optimizer
+│   ├── train.py         # Training loop and checkpointing
+│   ├── generate.py      # Constrained generation and PNG rendering
+│   └── checkpoint.py    # Save/load, SVG embedding slice only
+├── tests/
+│   ├── test_arc.py
+│   ├── test_tokenizer.py
+│   ├── test_grammar.py
+│   ├── test_data.py
+│   ├── test_model.py
+│   └── test_vocab.py
+├── README.md
+└── pyproject.toml
+```
+
+## Training
+
+| setting | value |
+|---|---|
+| base model | Qwen2.5-7B |
+| dataset | OmniSVG/MMSVG-Icon |
+| examples | 48,953 |
+| epochs | 2 |
+| steps | 6,000 |
+| final val loss | 0.95 |
+| GPU | RTX 5090 |
+| time | ~4 hours |
 
 ## MMSVG-Icon Dataset Analysis
 
@@ -197,3 +341,8 @@ Out of 20,000 SVG files, 17 were rejected. The first five inspected files:
 * Row 9305: 7 paths, largest value `2.66e+05`
 
 The smallest of these five largest values is 43,700. This is about 218 times the canvas width of 200 units, so it is an unusually large value.
+
+## License
+
+MIT for the code. Non-commercial only due to the training dataset.
+See [LICENSE](LICENSE) for details.
