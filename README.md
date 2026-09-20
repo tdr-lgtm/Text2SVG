@@ -49,18 +49,6 @@ python -m svgicon.generate --ckpt checkpoint --prompt "A yellow star icon." --ou
 
 Open `out/00_0.svg` or `out/00_0.png` to see the result.
 
-## Generated Examples
-
-### Custom Prompt
-
-**Prompt:** A yellow star icon.
-
-```bash
-python -m svgicon.generate --ckpt checkpoint --prompt "A yellow star icon." --out results/out
-```
-
-![Generated yellow star](results/out/00_0.png)
-
 ### Default Prompts
 
 Generated four samples for each default prompt.
