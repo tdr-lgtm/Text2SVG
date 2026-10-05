@@ -8,6 +8,8 @@ coordinates, and packed colours. A grammar state machine masks the
 logits at every step so only structurally legal tokens are reachable.
 Every output parses. Every output renders.
 
+![Text2SVG demo](assets/text2svg_demo.gif)
+
 ## What it does
 
 - Tokenizes SVG path data, fill colours, and coordinates into a closed
